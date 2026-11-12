@@ -1,0 +1,12 @@
+# dati e risultati: troppo grandi o rigenerabili
+datasets/
+cache/
+cache_finta/
+runs/
+check_*.png
+*.layout.json
+
+# ambiente Python
+.venv/
+__pycache__/
+*.pyc

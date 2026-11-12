@@ -1,0 +1,20 @@
+[project]
+name = "layout-model"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy>=2.5.4",
+    "pyarrow>=26.0.1",
+    "pymupdf>=1.24.3",
+    "scikit-learn>=1.9.1",
+    "torch>=2.11.0",
+]
+
+# PyTorch con CUDA (RTX 3090): preso dall'indice ufficiale di PyTorch, non da PyPI
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu128" }
