@@ -3,6 +3,7 @@ name = "layout-model"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
+    "docling>=2.150.0",
     "liteparse>=2.18.0",
     "matplotlib>=3.11.2",
     "numpy>=2.5.4",

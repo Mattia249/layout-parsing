@@ -13,3 +13,5 @@ __pycache__/
 *.log
 *.annotated.pdf
 *.annotated.json
+*.docling.pdf
+*.docling.json
