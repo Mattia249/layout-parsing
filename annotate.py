@@ -2,17 +2,17 @@
 
 Uso:
   uv run annotate.py runs/v1/best.pt documento.pdf
-  uv run annotate.py runs/v1/best.pt documento.pdf --estrattore liteparse
-  uv run annotate.py runs/v1/best.pt documento.pdf --ocr auto --dpi 300 --out risultato.pdf
+  uv run annotate.py runs/v1/best.pt document.pdf --extractor liteparse
+  uv run annotate.py runs/v1/best.pt document.pdf --ocr auto --dpi 300 --out result.pdf
 
---estrattore pymupdf    testo del PDF letto con PyMuPDF, come nel training (default)
---estrattore liteparse  solo il testo (parole, posizione, font) letto con LiteParse, senza vettori né analisi di
+--extractor pymupdf     testo del PDF letto con PyMuPDF, come nel training (default)
+--extractor liteparse   solo il testo (parole, posizione, font) letto con LiteParse, senza vettori né analisi di
                         layout: il risultato ha la stessa forma di quello dell'OCR
---ocr sempre  OCR su ogni pagina, ignorando il testo già presente nel PDF (default con pymupdf)
+--ocr always  OCR su ogni pagina, ignorando il testo già presente nel PDF (default con pymupdf)
 --ocr auto    OCR solo sulle pagine senza testo; le altre usano l'estrattore (default con liteparse)
---ocr mai     mai OCR
+--ocr never    mai OCR
 
-Scrive il PDF annotato (default: documento.annotato.pdf) e, accanto, un .json con i blocchi.
+Scrive il PDF annotato (default: document.annotated.pdf) e, accanto, un .json con i blocchi.
 """
 import argparse
 import json
@@ -64,30 +64,30 @@ def main():
     parser = argparse.ArgumentParser(description="OCR o estrazione, modello di layout e PDF annotato.")
     parser.add_argument("checkpoint", help="per esempio runs/v1/best.pt")
     parser.add_argument("pdf")
-    parser.add_argument("--estrattore", choices=["pymupdf", "liteparse"], default="pymupdf")
-    parser.add_argument("--ocr", choices=["sempre", "auto", "mai"],
-                        help="default: sempre con pymupdf, auto con liteparse")
+    parser.add_argument("--extractor", choices=["pymupdf", "liteparse"], default="pymupdf")
+    parser.add_argument("--ocr", choices=["always", "auto", "never"],
+                        help="default: always con pymupdf, auto con liteparse")
     parser.add_argument("--dpi", type=int, default=200, help="risoluzione a cui la pagina viene letta dall'OCR")
-    parser.add_argument("--out", help="PDF annotato (default: <nome>.annotato.pdf)")
+    parser.add_argument("--out", help="PDF annotato (default: <name>.annotated.pdf)")
     args = parser.parse_args()
-    use_lite = args.estrattore == "liteparse"
-    ocr_mode = args.ocr or ("auto" if use_lite else "sempre")
+    use_lite = args.extractor == "liteparse"
+    ocr_mode = args.ocr or ("auto" if use_lite else "always")
 
     src = pathlib.Path(args.pdf)
-    out = pathlib.Path(args.out) if args.out else src.with_name(src.stem + ".annotato.pdf")
+    out = pathlib.Path(args.out) if args.out else src.with_name(src.stem + ".annotated.pdf")
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model, cfg = load_model(args.checkpoint, device)
-    engine = make_engine(use_cuda=device == "cuda") if ocr_mode != "mai" else None
+    engine = make_engine(use_cuda=device == "cuda") if ocr_mode != "never" else None
     lp_pages = {}
     if use_lite:                                             # LiteParse lavora sul file intero: una volta sola
         lp_pages = {p.page_num: p for p in lite.parse_document(src)}
-    print(f"Estrattore: {args.estrattore}, OCR: {ocr_mode}")
+    print(f"Estrattore: {args.extractor}, OCR: {ocr_mode}")
 
     doc = pymupdf.open(src)
     pages, times = [], np.zeros(3)
     for number, page in enumerate(doc, start=1):
         lp_page = lp_pages.get(number)
-        use_ocr = ocr_mode == "sempre" or (ocr_mode == "auto" and not page.get_text("text").strip())
+        use_ocr = ocr_mode == "always" or (ocr_mode == "auto" and not page.get_text("text").strip())
         if use_ocr:
             extract = lambda p: extract_page_ocr(p, engine, dpi=args.dpi, with_graphics=cfg.use_graphics)
             source = "OCR"

@@ -18,7 +18,7 @@ def main(data_dir, n_pages=200, n_images=5):
     f = pq.ParquetFile(path)
     print("Colonne:", f.schema_arrow.names)
     # le quattro ipotesi su come sono scritti i box: formato x spazio
-    cover = {(fmt, space): [] for fmt in ("xywh", "xyxy") for space in ("1025", "punti")}
+    cover = {(fmt, space): [] for fmt in ("xywh", "xyxy") for space in ("1025", "points")}
     n_nodes, ids, samples, no_text, done = [], [], [], 0, 0
     for batch in f.iter_batches(batch_size=16, columns=["bboxes", "category_id", "metadata", "pdf"]):
         for row in batch.to_pylist():

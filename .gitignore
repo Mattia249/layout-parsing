@@ -1,7 +1,7 @@
 # dati e risultati: troppo grandi o rigenerabili
 datasets/
 cache/
-cache_finta/
+cache_fake/
 runs/
 check_*.png
 *.layout.json
@@ -11,5 +11,5 @@ check_*.png
 __pycache__/
 *.pyc
 *.log
-*.annotato.pdf
-*.annotato.json
+*.annotated.pdf
+*.annotated.json

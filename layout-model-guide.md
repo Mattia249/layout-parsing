@@ -126,8 +126,8 @@ Ordine dei comandi, dall'inizio alla fine:
 
 ```
 python extract_code.py layout-model-guide.md        (crea i file, vedi appendice)
-python smoke_test.py cache_finta                    (verifica l'installazione)
-python train.py cache_finta runs/prova 3            (verifica il training, pochi minuti)
+python smoke_test.py cache_fake                     (verifica l'installazione)
+python train.py cache_fake runs/prova 3            (verifica il training, pochi minuti)
 python check_data.py D:/AI/datasets/DocLayNet-v1.2/data
 python build_cache.py D:/AI/datasets/DocLayNet-v1.2/data D:/AI/cache xywh 1025
 python baseline.py D:/AI/cache
@@ -237,7 +237,7 @@ def main(data_dir, n_pages=200, n_images=5):
     f = pq.ParquetFile(path)
     print("Colonne:", f.schema_arrow.names)
     # le quattro ipotesi su come sono scritti i box: formato x spazio
-    cover = {(fmt, space): [] for fmt in ("xywh", "xyxy") for space in ("1025", "punti")}
+    cover = {(fmt, space): [] for fmt in ("xywh", "xyxy") for space in ("1025", "points")}
     n_nodes, ids, samples, no_text, done = [], [], [], 0, 0
     for batch in f.iter_batches(batch_size=16, columns=["bboxes", "category_id", "metadata", "pdf"]):
         for row in batch.to_pylist():
@@ -498,9 +498,9 @@ def ann_to_points(bboxes, coco_w, coco_h, page_w, page_h, fmt="xywh"):
 
 def page_annotations(row, page_w, page_h, fmt="xywh", space="1025"):
     """Box annotati di una riga del dataset, in punti.
-    space: "1025" se i box sono nello spazio dell'immagine, "punti" se sono già in punti della pagina."""
+    space: "1025" se i box sono nello spazio dell'immagine, "points" se sono già in punti della pagina."""
     meta = row["metadata"]
-    src_w, src_h = (page_w, page_h) if space == "punti" else (meta["coco_width"], meta["coco_height"])
+    src_w, src_h = (page_w, page_h) if space == "points" else (meta["coco_width"], meta["coco_height"])
     return ann_to_points(row["bboxes"], src_w, src_h, page_w, page_h, fmt)
 
 
@@ -857,7 +857,7 @@ Il terzo e il quarto argomento sono il formato e lo spazio dei box: usa il coman
 ```python
 # file: build_cache.py
 """Estrae tutte le pagine del dataset e le salva con le etichette. Si può interrompere e rilanciare.
-Uso: python build_cache.py D:/AI/datasets/DocLayNet-v1.2/data D:/AI/cache [xywh|xyxy] [1025|punti]"""
+Uso: python build_cache.py D:/AI/datasets/DocLayNet-v1.2/data D:/AI/cache [xywh|xyxy] [1025|points]"""
 import glob
 import os
 import sys
@@ -1424,7 +1424,7 @@ def write_cache(folder, rng, n_train=200, n_val=40):
     for split, count in (("train", n_train), ("validation", n_val)):
         os.makedirs(os.path.join(folder, split), exist_ok=True)
         for k in range(count):
-            save_raw(fake_raw(rng)[0], os.path.join(folder, split, f"finta_{k:04d}.npz"))
+            save_raw(fake_raw(rng)[0], os.path.join(folder, split, f"fake_{k:04d}.npz"))
     print(f"Cache finta scritta in {folder}: {n_train} pagine di training, {n_val} di validation.")
 
 

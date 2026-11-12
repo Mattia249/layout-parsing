@@ -65,7 +65,7 @@ def _span(item, text):
     text = _CONTROL.sub(" ", text)
     bold, italic, mono = font_style(item)
     return {"text": text, "bbox": (item.x, item.y, item.x + item.width, item.y + item.height),
-            "size": font_size(item), "font": item.font_name or "sconosciuto", "color": rgb(item.fill_color),
+            "size": font_size(item), "font": item.font_name or "unknown", "color": rgb(item.fill_color),
             "flags": 16 * bold + 2 * italic + 8 * mono}
 
 
