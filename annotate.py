@@ -1,7 +1,7 @@
 """OCR o estrazione dal PDF -> modello di layout -> PDF annotato con i blocchi trovati.
 
 Uso:
-  uv run annotate.py runs/v1/best.pt documento.pdf
+  uv run annotate.py runs/v1/best.pt document.pdf
   uv run annotate.py runs/v1/best.pt document.pdf --extractor liteparse
   uv run annotate.py runs/v1/best.pt document.pdf --ocr auto --dpi 300 --out result.pdf
 
