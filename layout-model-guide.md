@@ -125,7 +125,7 @@ progetto/
 Ordine dei comandi, dall'inizio alla fine:
 
 ```
-python estrai_codice.py guida-modello-layout.md     (crea i file, vedi appendice)
+python extract_code.py layout-model-guide.md        (crea i file, vedi appendice)
 python smoke_test.py cache_finta                    (verifica l'installazione)
 python train.py cache_finta runs/prova 3            (verifica il training, pochi minuti)
 python check_data.py D:/AI/datasets/DocLayNet-v1.2/data
@@ -1718,7 +1718,7 @@ Scrivendo e provando il codice ho cambiato alcune cose dette nei messaggi preced
 
 ## Appendice: creare i file da questa guida
 
-Per non copiare a mano quattordici file, salva queste righe come `estrai_codice.py` nella cartella di progetto, accanto a questa guida, e lancia `python estrai_codice.py guida-modello-layout.md`.
+Per non copiare a mano quattordici file, salva queste righe come `extract_code.py` nella cartella di progetto, accanto a questa guida, e lancia `python extract_code.py layout-model-guide.md`.
 
 ```python
 import pathlib

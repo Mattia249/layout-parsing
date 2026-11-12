@@ -1,6 +1,6 @@
 # PyMuPDF e LiteParse a confronto
 
-Data: 2026-11-12. Comando: `uv run confronta_estrattori.py runs/v1/best.pt 500`.
+Data: 2026-11-12. Comando: `uv run compare_extractors.py runs/v1/best.pt 500`.
 
 Stesso modello (`runs/v1/best.pt`, addestrato su nodi estratti con PyMuPDF), stesse 503 pagine di validation
 prese da tutti i 7 file, metriche contro le annotazioni di DocLayNet. LiteParse 2.18.0, PyMuPDF 2.1.
@@ -33,7 +33,7 @@ prese da tutti i 7 file, metriche contro le annotazioni di DocLayNet. LiteParse 
   modo un po' diverso: riscrive le formule in LaTeX (`$A_{0}$`) senza font, e sul testo spaziato lettera per
   lettera mette spazi sbagliati già nel suo testo ("NOT ES TO AN D").
 - Dopo questo confronto LiteParse è stato ridotto al solo testo (niente vettori, immagini o blocchi di layout):
-  in `annota.py` si comporta come l'OCR, e la modalità `misto` è stata tolta.
+  in `annotate.py` si comporta come l'OCR, e la modalità `misto` è stata tolta.
 
 ## Correzioni fatte nella ricostruzione delle righe (prima: F1 nodi 0.841, `other` 0.125)
 

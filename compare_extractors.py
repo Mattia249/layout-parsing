@@ -1,6 +1,6 @@
 """Stesso modello, stesse pagine di validation, due estrattori: PyMuPDF (quello del training) e LiteParse.
 Misura le metriche di train.py contro le annotazioni di DocLayNet.
-Uso: uv run confronta_estrattori.py runs/v1/best.pt [numero_pagine]"""
+Uso: uv run compare_extractors.py runs/v1/best.pt [numero_pagine]"""
 import glob
 import sys
 import time

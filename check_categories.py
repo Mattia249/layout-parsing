@@ -1,5 +1,5 @@
 """Copertura dei box (xywh, 1025) e nodi per pagina, per categoria di documento, su 12 file sparsi del train.
-Uso: uv run check_categorie.py"""
+Uso: uv run check_categories.py"""
 import collections, glob, os, sys
 import numpy as np, pyarrow.parquet as pq, pymupdf
 from layout.config import KIND_TEXT

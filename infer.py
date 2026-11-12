@@ -27,7 +27,7 @@ def load_model(path, device):
 @torch.no_grad()
 def predict_page(page, model, cfg, device, extract=None):
     """Ritorna i blocchi della pagina e i tempi (estrazione, feature, modello) in secondi.
-    extract: funzione pagina -> nodi; di default il livello di testo del PDF (annota.py la sostituisce con l'OCR)."""
+    extract: funzione pagina -> nodi; di default il livello di testo del PDF (annotate.py la sostituisce con l'OCR)."""
     t0 = time.perf_counter()
     if extract is None:
         extract = lambda p: extract_page(p, with_graphics=cfg.use_graphics)

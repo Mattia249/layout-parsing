@@ -1,9 +1,9 @@
 """OCR o estrazione dal PDF -> modello di layout -> PDF annotato con i blocchi trovati.
 
 Uso:
-  uv run annota.py runs/v1/best.pt documento.pdf
-  uv run annota.py runs/v1/best.pt documento.pdf --estrattore liteparse
-  uv run annota.py runs/v1/best.pt documento.pdf --ocr auto --dpi 300 --out risultato.pdf
+  uv run annotate.py runs/v1/best.pt documento.pdf
+  uv run annotate.py runs/v1/best.pt documento.pdf --estrattore liteparse
+  uv run annotate.py runs/v1/best.pt documento.pdf --ocr auto --dpi 300 --out risultato.pdf
 
 --estrattore pymupdf    testo del PDF letto con PyMuPDF, come nel training (default)
 --estrattore liteparse  solo il testo (parole, posizione, font) letto con LiteParse, senza vettori né analisi di
