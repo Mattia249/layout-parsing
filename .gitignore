@@ -11,3 +11,5 @@ check_*.png
 __pycache__/
 *.pyc
 *.log
+*.annotato.pdf
+*.annotato.json
