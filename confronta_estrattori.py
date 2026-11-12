@@ -41,7 +41,7 @@ def main(ckpt, n=500):
     pymupdf.TOOLS.mupdf_display_errors(False)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model, cfg = load_model(ckpt, device)
-    parser = lite.make_parser(images=False)
+    parser = lite.make_parser()
     examples = {"pymupdf": [], "liteparse": []}
     seconds = {"pymupdf": 0.0, "liteparse": 0.0}
     skipped = 0

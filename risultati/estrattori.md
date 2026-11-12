@@ -32,7 +32,8 @@ prese da tutti i 7 file, metriche contro le annotazioni di DocLayNet. LiteParse 
 - Il motivo più probabile è che il modello ha imparato sui nodi di PyMuPDF, e LiteParse spezza il testo in
   modo un po' diverso: riscrive le formule in LaTeX (`$A_{0}$`) senza font, e sul testo spaziato lettera per
   lettera mette spazi sbagliati già nel suo testo ("NOT ES TO AN D").
-- Per questo `annota.py --estrattore misto` prende i nodi da PyMuPDF e da LiteParse solo font e vettori.
+- Dopo questo confronto LiteParse è stato ridotto al solo testo (niente vettori, immagini o blocchi di layout):
+  in `annota.py` si comporta come l'OCR, e la modalità `misto` è stata tolta.
 
 ## Correzioni fatte nella ricostruzione delle righe (prima: F1 nodi 0.841, `other` 0.125)
 

@@ -2,18 +2,15 @@
 
 Uso:
   uv run annota.py runs/v1/best.pt documento.pdf
-  uv run annota.py runs/v1/best.pt documento.pdf --estrattore liteparse --mostra-vettori
+  uv run annota.py runs/v1/best.pt documento.pdf --estrattore liteparse
   uv run annota.py runs/v1/best.pt documento.pdf --ocr auto --dpi 300 --out risultato.pdf
 
 --estrattore pymupdf    testo del PDF letto con PyMuPDF, come nel training (default)
---estrattore liteparse  testo, font, colori e vettori letti con LiteParse; il JSON riporta per ogni blocco il font
-                        e i filetti, e per ogni pagina tutti i vettori
---estrattore misto      nodi da PyMuPDF (quelli su cui il modello è addestrato), font e vettori da LiteParse:
-                        stessa precisione di pymupdf, stesse informazioni in più di liteparse (consigliato)
+--estrattore liteparse  solo il testo (parole, posizione, font) letto con LiteParse, senza vettori né analisi di
+                        layout: il risultato ha la stessa forma di quello dell'OCR
 --ocr sempre  OCR su ogni pagina, ignorando il testo già presente nel PDF (default con pymupdf)
 --ocr auto    OCR solo sulle pagine senza testo; le altre usano l'estrattore (default con liteparse)
 --ocr mai     mai OCR
---mostra-vettori  disegna in magenta i filetti trovati (con liteparse o misto)
 
 Scrive il PDF annotato (default: documento.annotato.pdf) e, accanto, un .json con i blocchi.
 """
@@ -62,42 +59,28 @@ def draw_blocks(page, blocks):
         page.insert_text((tag.x0 + 1.5, tag.y1 - 1.6), label, fontname="helv", fontsize=6, color=(1, 1, 1))
 
 
-def draw_rules(page, lp_page):
-    """I filetti trovati da LiteParse, in magenta sottile: per controllare a occhio cosa viene estratto."""
-    shape = page.new_shape()
-    for _, (x0, y0, x1, y1), _kind in lite.rules(lp_page):
-        shape.draw_rect(pymupdf.Rect(x0, y0, x1, y1))
-    shape.finish(color=(0.9, 0, 0.9), fill=(0.9, 0, 0.9), width=0.4)
-    shape.commit(overlay=True)
-
-
 def main():
     sys.stdout.reconfigure(errors="replace")                 # la console di Windows non stampa ogni carattere (es. α)
     parser = argparse.ArgumentParser(description="OCR o estrazione, modello di layout e PDF annotato.")
     parser.add_argument("checkpoint", help="per esempio runs/v1/best.pt")
     parser.add_argument("pdf")
-    parser.add_argument("--estrattore", choices=["pymupdf", "liteparse", "misto"], default="pymupdf")
+    parser.add_argument("--estrattore", choices=["pymupdf", "liteparse"], default="pymupdf")
     parser.add_argument("--ocr", choices=["sempre", "auto", "mai"],
                         help="default: sempre con pymupdf, auto con liteparse")
     parser.add_argument("--dpi", type=int, default=200, help="risoluzione a cui la pagina viene letta dall'OCR")
-    parser.add_argument("--mostra-vettori", action="store_true",
-                        help="disegna i filetti trovati da LiteParse (con liteparse o misto)")
     parser.add_argument("--out", help="PDF annotato (default: <nome>.annotato.pdf)")
     args = parser.parse_args()
-    use_lite = args.estrattore in ("liteparse", "misto")    # LiteParse serve per font e vettori in entrambi i casi
+    use_lite = args.estrattore == "liteparse"
     ocr_mode = args.ocr or ("auto" if use_lite else "sempre")
-    if args.mostra_vettori and not use_lite:
-        parser.error("--mostra-vettori richiede --estrattore liteparse oppure misto")
 
     src = pathlib.Path(args.pdf)
     out = pathlib.Path(args.out) if args.out else src.with_name(src.stem + ".annotato.pdf")
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model, cfg = load_model(args.checkpoint, device)
     engine = make_engine(use_cuda=device == "cuda") if ocr_mode != "mai" else None
-    lp_pages, lp_images = {}, {}
+    lp_pages = {}
     if use_lite:                                             # LiteParse lavora sul file intero: una volta sola
-        pages, lp_images = lite.parse_document(src, images=cfg.use_graphics)
-        lp_pages = {p.page_num: p for p in pages}
+        lp_pages = {p.page_num: p for p in lite.parse_document(src)}
     print(f"Estrattore: {args.estrattore}, OCR: {ocr_mode}")
 
     doc = pymupdf.open(src)
@@ -108,30 +91,20 @@ def main():
         if use_ocr:
             extract = lambda p: extract_page_ocr(p, engine, dpi=args.dpi, with_graphics=cfg.use_graphics)
             source = "OCR"
-        elif args.estrattore == "liteparse" and lp_page is not None:
-            extract = lambda p: lite.extract_page_liteparse(p, lp_page, lp_images.get(number, ()), cfg.use_graphics)
+        elif lp_page is not None:
+            extract = lambda p: lite.extract_page_liteparse(p, lp_page, cfg.use_graphics)
             source = "LiteParse"
         else:
             extract = lambda p: extract_page(p, with_graphics=cfg.use_graphics)
             source = "PyMuPDF"
         blocks, t = predict_page(page, model, cfg, device, extract)
         times += t
-        record = {"page": number, "source": source.lower(), "blocks": blocks}
-        if lp_page is not None:
-            for b in blocks:
-                b.update(lite.describe_block(b["bbox"], lp_page))
-            record["vettori"] = lite.page_vectors(lp_page)
-            if args.mostra_vettori:
-                draw_rules(page, lp_page)
         draw_blocks(page, blocks)
-        pages.append(record)
+        pages.append({"page": number, "source": source.lower(), "blocks": blocks})
         print(f"Pagina {number} ({source}): {sum(b['nodes'] for b in blocks)} nodi, {len(blocks)} blocchi, "
               f"{t[0] * 1000:.0f} ms di estrazione, {(t[1] + t[2]) * 1000:.0f} ms di feature e modello")
         for k, b in enumerate(blocks[:8], start=1):
-            font = b.get("font")
-            style = (f"  [{font['nome']} {font['corpo']:g}pt{' grassetto' if font['grassetto'] else ''}"
-                     f"{' corsivo' if font['corsivo'] else ''}]") if font else ""
-            print(f"   {k:2d} {b['class']:15s} {b['text'][:60]}{style}")
+            print(f"   {k:2d} {b['class']:15s} {b['text'][:60]}")
 
     doc.save(out, garbage=3, deflate=True)
     with open(out.with_suffix(".json"), "w", encoding="utf-8") as f:
