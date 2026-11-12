@@ -143,7 +143,7 @@ def write_cache(folder, rng, n_train=200, n_val=40):
     for split, count in (("train", n_train), ("validation", n_val)):
         os.makedirs(os.path.join(folder, split), exist_ok=True)
         for k in range(count):
-            save_raw(fake_raw(rng)[0], os.path.join(folder, split, f"finta_{k:04d}.npz"))
+            save_raw(fake_raw(rng)[0], os.path.join(folder, split, f"fake_{k:04d}.npz"))
     print(f"Cache finta scritta in {folder}: {n_train} pagine di training, {n_val} di validation.")
 
 

@@ -17,9 +17,9 @@ def ann_to_points(bboxes, coco_w, coco_h, page_w, page_h, fmt="xywh"):
 
 def page_annotations(row, page_w, page_h, fmt="xywh", space="1025"):
     """Box annotati di una riga del dataset, in punti.
-    space: "1025" se i box sono nello spazio dell'immagine, "punti" se sono già in punti della pagina."""
+    space: "1025" se i box sono nello spazio dell'immagine, "points" se sono già in punti della pagina."""
     meta = row["metadata"]
-    src_w, src_h = (page_w, page_h) if space == "punti" else (meta["coco_width"], meta["coco_height"])
+    src_w, src_h = (page_w, page_h) if space == "points" else (meta["coco_width"], meta["coco_height"])
     return ann_to_points(row["bboxes"], src_w, src_h, page_w, page_h, fmt)
 
 

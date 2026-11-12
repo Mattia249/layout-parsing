@@ -1,5 +1,5 @@
 """Estrae tutte le pagine del dataset e le salva con le etichette. Si può interrompere e rilanciare.
-Uso: python build_cache.py D:/AI/datasets/DocLayNet-v1.2/data D:/AI/cache [xywh|xyxy] [1025|punti]"""
+Uso: python build_cache.py D:/AI/datasets/DocLayNet-v1.2/data D:/AI/cache [xywh|xyxy] [1025|points]"""
 import glob
 import os
 import sys

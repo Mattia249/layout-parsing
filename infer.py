@@ -25,10 +25,13 @@ def load_model(path, device):
 
 
 @torch.no_grad()
-def predict_page(page, model, cfg, device):
-    """Ritorna i blocchi della pagina e i tempi (estrazione, feature, modello) in secondi."""
+def predict_page(page, model, cfg, device, extract=None):
+    """Ritorna i blocchi della pagina e i tempi (estrazione, feature, modello) in secondi.
+    extract: funzione pagina -> nodi; di default il livello di testo del PDF (annotate.py la sostituisce con l'OCR)."""
     t0 = time.perf_counter()
-    raw = add_text_feats(extract_page(page, with_graphics=cfg.use_graphics))
+    if extract is None:
+        extract = lambda p: extract_page(p, with_graphics=cfg.use_graphics)
+    raw = add_text_feats(extract(page))
     t1 = time.perf_counter()
     ex = make_example(raw, cfg, cap=10 ** 9)                 # in uso reale nessun limite al numero di nodi
     n = len(ex["feats"])
@@ -58,6 +61,7 @@ def predict_page(page, model, cfg, device):
 
 
 def main(ckpt, pdf_path):
+    sys.stdout.reconfigure(errors="replace")                 # la console di Windows non stampa ogni carattere (es. α)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model, cfg = load_model(ckpt, device)
     doc = pymupdf.open(pdf_path)
