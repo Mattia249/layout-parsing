@@ -24,6 +24,16 @@ class PageDataset(Dataset):
         return make_example(load_raw(self.files[k]), self.cfg, self.train, self.rng)
 
 
+def worker_init(_):
+    """Ogni processo del DataLoader riceve una copia del dataset, quindi anche dello stesso generatore casuale:
+    senza questo, tutti i processi applicherebbero la stessa augmentation. torch.initial_seed() è diverso per
+    ogni processo e a ogni avvio."""
+    ds = torch.utils.data.get_worker_info().dataset
+    while not isinstance(ds, PageDataset) and hasattr(ds, "dataset"):   # es. Subset: il dataset vero è dentro
+        ds = ds.dataset
+    ds.rng = np.random.default_rng(torch.initial_seed())
+
+
 def collate(batch):
     """Unisce più pagine in un batch, riempiendo le più corte con padding."""
     b_size = len(batch)
@@ -58,4 +68,5 @@ def collate(batch):
 
 
 def to_device(batch, device):
-    return {k: (v.to(device) if torch.is_tensor(v) else v) for k, v in batch.items()}
+    # non_blocking: con la memoria "pinned" la copia verso la GPU si sovrappone al calcolo
+    return {k: (v.to(device, non_blocking=True) if torch.is_tensor(v) else v) for k, v in batch.items()}

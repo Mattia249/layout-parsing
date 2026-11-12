@@ -42,3 +42,5 @@ class Config:
     link_weight: float = 1.0    # peso della loss dei link rispetto a quella delle classi
     link_threshold: float = 0.5 # probabilità oltre la quale due nodi vengono uniti
     seed: int = 0
+    # risorse
+    num_workers: int = 8        # processi che preparano i batch in parallelo (0 = tutto nel processo principale)

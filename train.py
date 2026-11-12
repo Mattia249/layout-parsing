@@ -10,7 +10,7 @@ import torch
 from torch.utils.data import DataLoader
 
 from layout.config import CLASSES, Config
-from layout.data import PageDataset, collate, to_device
+from layout.data import PageDataset, collate, to_device, worker_init
 from layout.decode import block_classes, block_match, f1_per_class, find_blocks
 from layout.model import LayoutModel, compute_losses, run
 
@@ -60,9 +60,15 @@ def main(cache_dir, out_dir, epochs=None):
 
     train_ds = PageDataset(os.path.join(cache_dir, "train"), cfg, train=True)
     val_ds = PageDataset(os.path.join(cache_dir, "validation"), cfg, train=False)
-    train_dl = DataLoader(train_ds, batch_size=cfg.batch_size, shuffle=True, collate_fn=collate, drop_last=True)
-    val_dl = DataLoader(val_ds, batch_size=max(cfg.batch_size // 2, 1), shuffle=False, collate_fn=collate)
-    print(f"Dispositivo: {device}. Pagine: {len(train_ds)} di training, {len(val_ds)} di validation.")
+    torch.backends.cuda.matmul.allow_tf32 = True             # sulle GPU Ampere (RTX 30xx): matmul più veloci
+    torch.backends.cudnn.allow_tf32 = True
+    loader = dict(collate_fn=collate, num_workers=cfg.num_workers, worker_init_fn=worker_init,
+                  persistent_workers=cfg.num_workers > 0, pin_memory=device == "cuda",
+                  prefetch_factor=4 if cfg.num_workers > 0 else None)
+    train_dl = DataLoader(train_ds, batch_size=cfg.batch_size, shuffle=True, drop_last=True, **loader)
+    val_dl = DataLoader(val_ds, batch_size=max(cfg.batch_size // 2, 1), shuffle=False, **loader)
+    print(f"Dispositivo: {device}. Pagine: {len(train_ds)} di training, {len(val_ds)} di validation. "
+          f"Processi per i dati: {cfg.num_workers}.")
 
     model = LayoutModel(cfg).to(device)
     opt = torch.optim.AdamW(model.parameters(), lr=cfg.lr, weight_decay=cfg.weight_decay)
