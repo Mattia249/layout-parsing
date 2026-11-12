@@ -81,7 +81,16 @@ def main(cache_dir, out_dir, epochs=None):
         return 0.5 * (1 + math.cos(math.pi * min((step - warmup) / max(total - warmup, 1), 1.0)))
 
     sched = torch.optim.lr_scheduler.LambdaLR(opt, lr_factor)
+
+    def eta(step, epochs_done, train_time, eval_time):
+        """Tempo mancante: step restanti al ritmo medio finora, più una validation per ogni epoca restante."""
+        left = (total - step) * train_time / max(step, 1) + (cfg.epochs - epochs_done) * eval_time
+        end = time.strftime("%H:%M", time.localtime(time.time() + left))
+        note = "" if eval_time or epochs_done == cfg.epochs else " + validation"   # finché non ne ho misurata una
+        return f"ETA {int(left) // 3600}h{int(left) % 3600 // 60:02d}m{note} (fine verso le {end})"
+
     best, step = -1.0, 0
+    train_time = eval_time = 0.0     # secondi spesi finora nel training; durata dell'ultima validation
     for epoch in range(cfg.epochs):
         model.train()
         start = time.time()
@@ -96,10 +105,15 @@ def main(cache_dir, out_dir, epochs=None):
             step += 1
             if step % 100 == 0:
                 print(f"step {step}/{total}  loss classi {loss_cls:.3f}  loss link {loss_link:.3f}  "
-                      f"{time.time() - start:.0f} s da inizio epoca")
+                      f"{time.time() - start:.0f} s da inizio epoca  "
+                      f"{eta(step, epoch, train_time + time.time() - start, eval_time)}")
+        train_time += time.time() - start
+        t_eval = time.time()
         m = evaluate(model, val_dl, cfg, device)
+        eval_time = time.time() - t_eval
         print(f"Epoca {epoch + 1}: F1 nodi {m['node_f1']:.3f}  F1 link {m['link_f1']:.3f}  "
-              f"F1 blocchi {m['block_f1']:.3f}")
+              f"F1 blocchi {m['block_f1']:.3f}   validation {eval_time:.0f} s  "
+              f"{eta(step, epoch + 1, train_time, eval_time)}")
         print("   per classe: " + "  ".join(f"{c} {v:.2f}" for c, v in zip(CLASSES, m["per_class"])))
         if m["block_f1"] > best:
             best = m["block_f1"]
