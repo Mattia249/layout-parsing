@@ -45,6 +45,8 @@ def build_split(data_dir, out_dir, split, fmt, space):
                     continue
                 ann = page_annotations(row, raw["page_w"], raw["page_h"], fmt, space)
                 cls = np.asarray(row["category_id"], np.int64) - 1          # da 1..11 a 0..10
+                if len(cls) and (cls.min() < 0 or cls.max() > 10):           # meglio fermarsi qui che a metà training
+                    raise ValueError(f"Pagina {meta['page_hash']}: id di classe fuori da 1..11: {sorted(set(cls + 1))}")
                 raw["label"], raw["block"] = assign(raw["box"], ann, cls)
                 save_raw(raw, dst)
                 written += 1
